@@ -64,9 +64,13 @@ async function runSentryCli(args: readonly string[]): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  const token = Deno.env.get("SENTRY_AUTH_TOKEN");
+  if (!token) {
+    console.warn("SENTRY_AUTH_TOKEN is not set; skipping Sentry upload.");
+    return;
+  }
   const release = Deno.env.get("SENTRY_RELEASE");
   if (!release) throw new Error("SENTRY_RELEASE is required");
-  if (!Deno.env.get("SENTRY_AUTH_TOKEN")) throw new Error("SENTRY_AUTH_TOKEN is required");
 
   console.log(`Uploading source maps and Wasm debug information for ${release}`);
 
