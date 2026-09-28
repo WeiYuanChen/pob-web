@@ -16,7 +16,7 @@ import { gameData } from "pob-game";
 import { Link, redirect } from "react-router";
 import { loadPobbBuildViaProxy } from "../lib/pobb.ts";
 import type { Route } from "../routes/+types/_index";
-import type { Games } from "./_game.tsx";
+import { fetchVersionData, type Games } from "./_game.tsx";
 
 dayjs.extend(utc);
 dayjs.extend(localeData);
@@ -30,8 +30,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     return redirect(`/poe1#${location.hash.slice("#build".length)}`);
   }
 
-  const rep = await fetch(__VERSION_URL__);
-  return (await rep.json()) as Games;
+  return await fetchVersionData();
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {

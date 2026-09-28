@@ -179,6 +179,10 @@ export default defineConfig(({ mode, isSsrBuild }) => {
           viteStaticCopy({
             targets: [
               {
+                src: normalizePath(path.join(rootDir, "version.json")),
+                dest: ".",
+              },
+              {
                 src: normalizePath(path.join(rootDir, "packages/driver/dist/debug/*")),
                 dest: "dist/debug/",
               },
