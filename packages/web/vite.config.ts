@@ -102,18 +102,14 @@ export default defineConfig(({ mode, isSsrBuild }) => {
       __VERSION_URL__: JSON.stringify(
         mode === "test" || (mode === "development" && !usePobCoolAsset)
           ? `/@fs/${rootDir}/version.json`
-          : usePobCoolAsset
-          ? "/__pob_asset/version.json"
-          : "https://asset.pob.cool/version.json",
+          : "/__pob_asset/version.json",
       ),
       __ASSET_PREFIX__: JSON.stringify(
         mode === "test"
           ? `/@fs/${packerR2Dir}`
           : mode === "development" && !usePobCoolAsset
           ? `/@fs/${packerR2Dir}`
-          : usePobCoolAsset
-          ? "/__pob_asset"
-          : "https://asset.pob.cool",
+          : "/__pob_asset",
       ),
     },
     worker: {
