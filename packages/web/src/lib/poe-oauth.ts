@@ -1,7 +1,14 @@
 import { decodeJwt } from "jose";
 
 const POE_ACCESS_TOKEN_CLAIM = "https://pob.cool/poe/access_token";
-const POE_TOKEN_ENDPOINT = "https://www.pathofexile.com/oauth/token";
+const VALID_POE_TOKEN_ENDPOINTS = new Set([
+  "https://www.pathofexile.com/oauth/token",
+  "https://pathofexile.com/oauth/token",
+  "https://www.pathofexile.tw/oauth/token",
+  "https://pathofexile.tw/oauth/token",
+  "https://poe.game.tw/oauth/token",
+  "https://www.poe.game.tw/oauth/token",
+]);
 const POE_OAUTH_CHANNEL_PREFIX = "pob-poe-oauth:";
 const POE_OAUTH_TIMEOUT_MS = 110_000;
 
@@ -155,7 +162,7 @@ export function poeOAuthState(authorizationUrl: string): string {
 }
 
 export function poeOAuthGrant(url: string, body: string | undefined): PoeOAuthGrant | undefined {
-  if (url !== POE_TOKEN_ENDPOINT || !body) return undefined;
+  if (!VALID_POE_TOKEN_ENDPOINTS.has(url) || !body) return undefined;
   const grant = new URLSearchParams(body).get("grant_type");
   return grant === "authorization_code" || grant === "refresh_token" ? grant : undefined;
 }
@@ -171,7 +178,17 @@ export function poeOAuthTokenResponse(accessToken: string) {
 
 export function corsFetchPolicy(url: string, appOrigin: string): "direct" | "fallback" | undefined {
   const { hostname } = new URL(url);
-  if (hostname === "api.pathofexile.com") return "direct";
+  if (
+    hostname === "api.pathofexile.com" ||
+    hostname === "api.pathofexile.tw" ||
+    hostname === "api.poe.game.tw" ||
+    hostname === "pathofexile.tw" ||
+    hostname === "www.pathofexile.tw" ||
+    hostname === "poe.game.tw" ||
+    hostname === "www.poe.game.tw"
+  ) {
+    return "direct";
+  }
   if (hostname === "pobb.in") return appOrigin === "https://pob.cool" ? "direct" : "fallback";
   return undefined;
 }

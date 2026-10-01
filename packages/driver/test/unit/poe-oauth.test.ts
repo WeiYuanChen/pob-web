@@ -39,3 +39,20 @@ Deno.test("PoE OAuth LaunchServer requests are recognized without matching unrel
     { url, timeoutMs: 30_000 },
   );
 });
+
+Deno.test("PoE OAuth LaunchServer requests recognize Taiwan server origins", () => {
+  const script = 'local luaSocket = require("socket")\n-- OAuth authorization code\nlocal stopAt = os.time() + 60';
+  const twUrl = "https://www.pathofexile.tw/oauth/authorize?client_id=pob&response_type=code&scope=" +
+    "account%3Aprofile%20account%3Aleagues%20account%3Acharacters%20account%3Atrade&state=sentinel";
+  const gameTwUrl = "https://poe.game.tw/oauth/authorize?client_id=pob&response_type=code&scope=" +
+    "account%3Aprofile%20account%3Aleagues%20account%3Acharacters%20account%3Atrade&state=sentinel";
+
+  assertEquals(poeOAuthAuthorizationRequest(script, serializeSubScriptValues([twUrl])), {
+    url: twUrl,
+    timeoutMs: 60_000,
+  });
+  assertEquals(poeOAuthAuthorizationRequest(script, serializeSubScriptValues([gameTwUrl])), {
+    url: gameTwUrl,
+    timeoutMs: 60_000,
+  });
+});

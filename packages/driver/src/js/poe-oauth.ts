@@ -92,6 +92,15 @@ export function serializeSubScriptValues(values: readonly SubScriptValue[]): Uin
   return data;
 }
 
+const VALID_POE_OAUTH_ORIGINS = new Set([
+  "https://www.pathofexile.com",
+  "https://pathofexile.com",
+  "https://www.pathofexile.tw",
+  "https://pathofexile.tw",
+  "https://poe.game.tw",
+  "https://www.poe.game.tw",
+]);
+
 export function poeOAuthAuthorizationRequest(
   script: string,
   data: Uint8Array,
@@ -105,7 +114,7 @@ export function poeOAuthAuthorizationRequest(
   const scopes = new Set(authorizationUrl.searchParams.get("scope")?.split(" "));
   const requiredScopes = ["account:profile", "account:leagues", "account:characters", "account:trade"];
   if (
-    authorizationUrl.origin !== "https://www.pathofexile.com" ||
+    !VALID_POE_OAUTH_ORIGINS.has(authorizationUrl.origin) ||
     authorizationUrl.pathname !== "/oauth/authorize" ||
     authorizationUrl.searchParams.get("client_id") !== "pob" ||
     authorizationUrl.searchParams.get("response_type") !== "code" ||
