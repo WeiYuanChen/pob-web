@@ -244,8 +244,8 @@ export function poeOAuthTokenResponse(accessToken: string) {
 
 export function corsFetchPolicy(url: string, appOrigin: string): "direct" | "fallback" | undefined {
   const { hostname } = new URL(url);
+  if (hostname === "api.pathofexile.com") return "direct";
   if (
-    hostname === "api.pathofexile.com" ||
     hostname === "api.pathofexile.tw" ||
     hostname === "api.poe.game.tw" ||
     hostname === "pathofexile.tw" ||
@@ -253,7 +253,7 @@ export function corsFetchPolicy(url: string, appOrigin: string): "direct" | "fal
     hostname === "poe.game.tw" ||
     hostname === "www.poe.game.tw"
   ) {
-    return "direct";
+    return "fallback";
   }
   if (hostname === "pobb.in") return appOrigin === "https://pob.cool" ? "direct" : "fallback";
   return undefined;

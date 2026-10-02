@@ -122,8 +122,12 @@ Deno.test("PoE OAuth bridge preserves the upstream authorization, exchange, and 
 
 Deno.test("only CORS-capable PoE APIs bypass the proxy", () => {
   assertEquals(corsFetchPolicy("https://api.pathofexile.com/character", "http://localhost:5173"), "direct");
-  assertEquals(corsFetchPolicy("https://api.pathofexile.tw/character", "http://localhost:5173"), "direct");
-  assertEquals(corsFetchPolicy("https://api.poe.game.tw/character", "http://localhost:5173"), "direct");
+  assertEquals(corsFetchPolicy("https://api.pathofexile.tw/character", "http://localhost:5173"), "fallback");
+  assertEquals(corsFetchPolicy("https://api.poe.game.tw/character", "http://localhost:5173"), "fallback");
+  assertEquals(
+    corsFetchPolicy("https://pathofexile.tw/character-window/get-characters", "http://localhost:5173"),
+    "fallback",
+  );
   assertEquals(corsFetchPolicy("https://pobb.in/example", "https://pob.cool"), "direct");
   assertEquals(corsFetchPolicy("https://pobb.in/example", "http://localhost:5173"), "fallback");
   assertEquals(

@@ -238,15 +238,7 @@ export default function PoBWindow(props: {
                 log.warn(tag.pob, "CORS fetch failed, falling back to proxy", url, { status: r.status });
               }
             } catch (e) {
-              log.warn(tag.pob, "CORS fetch error", e);
-              if (corsPolicy === "direct") {
-                rep = {
-                  body: "",
-                  error: e instanceof Error ? e.message : String(e),
-                  headers: {},
-                  status: undefined,
-                };
-              }
+              log.warn(tag.pob, "CORS fetch error, falling back to proxy", e);
             }
           }
 
