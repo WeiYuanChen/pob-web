@@ -1,6 +1,11 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useRef, useState } from "react";
-import { broadcastPoeOAuthResult, isPoeOAuthChannel, POE_OAUTH_PENDING_CHANNEL } from "../lib/poe-oauth.ts";
+import {
+  broadcastPoeOAuthResult,
+  isPoeOAuthChannel,
+  POE_OAUTH_PENDING_CHANNEL,
+  type PoeOAuthWindowMessage,
+} from "../lib/poe-oauth.ts";
 
 export default function PoeOAuthPopup() {
   const auth0 = useAuth0();
@@ -11,13 +16,29 @@ export default function PoeOAuthPopup() {
     if (auth0.isLoading || started.current) return;
     started.current = true;
 
-    const finish = (channelName: string, result: { accessToken: string } | { error: string }) => {
+    const finish = (channelName: string, result: PoeOAuthWindowMessage) => {
       sessionStorage.removeItem(POE_OAUTH_PENDING_CHANNEL);
       broadcastPoeOAuthResult(channelName, result);
       window.close();
     };
 
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const state = params.get("state");
+    const errorParam = params.get("error_description") || params.get("error");
     const pendingChannel = sessionStorage.getItem(POE_OAUTH_PENDING_CHANNEL);
+
+    if (code && state && isPoeOAuthChannel(pendingChannel)) {
+      setMessage("Authorization code received. Completing…");
+      finish(pendingChannel, { code, state });
+      return;
+    }
+
+    if (errorParam && isPoeOAuthChannel(pendingChannel)) {
+      finish(pendingChannel, { error: errorParam });
+      return;
+    }
+
     if (isPoeOAuthChannel(pendingChannel)) {
       if (auth0.error) {
         finish(pendingChannel, { error: auth0.error.message });
@@ -36,14 +57,22 @@ export default function PoeOAuthPopup() {
       return;
     }
 
-    const params = new URLSearchParams(window.location.search);
     const channelName = params.get("channel");
+    const authUrl = params.get("auth_url");
+
     if (!isPoeOAuthChannel(channelName)) {
       setMessage("Invalid Path of Exile authorization request");
       return;
     }
 
     sessionStorage.setItem(POE_OAUTH_PENDING_CHANNEL, channelName);
+
+    if (authUrl) {
+      setMessage("Redirecting to Path of Exile…");
+      window.location.href = authUrl;
+      return;
+    }
+
     setMessage("Redirecting to Path of Exile…");
     void auth0.loginWithRedirect({
       appState: { returnTo: "/auth/poe-popup" },
