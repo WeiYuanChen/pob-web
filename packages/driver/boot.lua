@@ -196,8 +196,24 @@ local function patchAccountRealmControl(accountRealm)
     end
 end
 
+local function patchPassiveSpecClass()
+    local passiveSpec = common and common.classes and common.classes["PassiveSpec"]
+    if passiveSpec and type(passiveSpec.ReplaceNode) == "function" and not passiveSpec._tw_patched then
+        local oldReplaceNode = passiveSpec.ReplaceNode
+        passiveSpec.ReplaceNode = function(self, old, newNode, ...)
+            if not newNode then
+                return 1
+            end
+            return oldReplaceNode(self, old, newNode, ...)
+        end
+        passiveSpec._tw_patched = true
+    end
+end
+
 local function patchAllRealms(main)
     if type(main) ~= "table" then return end
+
+    patchPassiveSpecClass()
 
     if type(main.realmList) == "table" then
         local hasTW = false
