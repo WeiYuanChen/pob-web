@@ -174,8 +174,10 @@ local function patchAccountRealmControl(accountRealm)
     if type(accountRealm) == "table" and type(accountRealm.list) == "table" then
         local hasTW = false
         for _, item in ipairs(accountRealm.list) do
-            if type(item) == "table" and (item.id == "TW" or item.realmCode == "tw" or item.label == "TW (台服)") then
+            if type(item) == "table" and (item.id == "TW" or item.label == "TW (台服)") then
                 hasTW = true
+                -- Ensure realmCode is "pc" since pathofexile.tw returns realm = "pc" for characters
+                item.realmCode = "pc"
                 break
             end
         end
@@ -183,7 +185,7 @@ local function patchAccountRealmControl(accountRealm)
             table.insert(accountRealm.list, 2, {
                 label = "TW (台服)",
                 id = "TW",
-                realmCode = "tw",
+                realmCode = "pc",
                 hostName = "https://pathofexile.tw/",
                 profileURL = "account/view-profile/"
             })
@@ -200,8 +202,9 @@ local function patchAllRealms(main)
     if type(main.realmList) == "table" then
         local hasTW = false
         for _, item in ipairs(main.realmList) do
-            if type(item) == "table" and (item.id == "TW" or item.realmCode == "tw" or item.label == "TW (台服)") then
+            if type(item) == "table" and (item.id == "TW" or item.label == "TW (台服)") then
                 hasTW = true
+                item.realmCode = "pc"
                 break
             end
         end
@@ -209,7 +212,7 @@ local function patchAllRealms(main)
             table.insert(main.realmList, 2, {
                 label = "TW (台服)",
                 id = "TW",
-                realmCode = "tw",
+                realmCode = "pc",
                 hostName = "https://pathofexile.tw/",
                 profileURL = "account/view-profile/"
             })
