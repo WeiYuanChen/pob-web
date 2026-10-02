@@ -183,7 +183,11 @@ export default function PoBWindow(props: {
           showError(error, "driver-runtime");
         },
         onFrame: (at, time, stats) => onFrameRef.current(at, time, stats),
-        onFetch: async (url, headers, body) => {
+        onFetch: async (rawUrl, headers, body) => {
+          const queryIndex = rawUrl.indexOf("?");
+          const url = queryIndex === -1
+            ? rawUrl
+            : rawUrl.slice(0, queryIndex) + rawUrl.slice(queryIndex).replace(/#/g, "%23");
           const oauthResponse = await poeOAuthBridge.exchange(url, body);
           if (oauthResponse) {
             return {

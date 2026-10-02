@@ -8,12 +8,21 @@ interface FetchRequest {
   headers: Record<string, string>;
 }
 
+function encodeQueryHash(rawUrl: string): string {
+  const queryIndex = rawUrl.indexOf("?");
+  if (queryIndex === -1) return rawUrl;
+  const baseUrl = rawUrl.slice(0, queryIndex);
+  const queryString = rawUrl.slice(queryIndex);
+  return baseUrl + queryString.replace(/#/g, "%23");
+}
+
 export const onRequest: PagesFunction<Env> = async (context) => {
   const req: FetchRequest = await context.request.json();
+  const targetUrl = encodeQueryHash(req.url);
   try {
     let r: Request;
     if (req.body) {
-      r = new Request(req.url, {
+      r = new Request(targetUrl, {
         method: "POST",
         body: req.body,
         headers: Object.assign({}, req.headers, {
@@ -21,7 +30,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }),
       });
     } else {
-      r = new Request(req.url, {
+      r = new Request(targetUrl, {
         method: "GET",
         headers: Object.assign({}, req.headers, {
           // "User-Agent": "pob.cool",

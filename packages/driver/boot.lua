@@ -170,9 +170,44 @@ local function installOAuthLogoutHook(buildMode)
     end
 end
 
+local function injectTaiwanRealm(self)
+    if type(self.realmList) == "table" then
+        local hasTW = false
+        for _, item in ipairs(self.realmList) do
+            if item.realm == "TW" or item.label == "TW" or item.label == "TW (台服)" then
+                hasTW = true
+                break
+            end
+        end
+        if not hasTW then
+            table.insert(self.realmList, 2, { label = "TW (台服)", realm = "TW", host = "https://pathofexile.tw" })
+        end
+    end
+end
+
+local function injectTaiwanRealmToImportTab(buildMode)
+    local importTab = buildMode and buildMode.importTab
+    if importTab and importTab.controls and importTab.controls.realm then
+        local realmCtrl = importTab.controls.realm
+        if type(realmCtrl.list) == "table" then
+            local hasTW = false
+            for _, item in ipairs(realmCtrl.list) do
+                if item.realm == "TW" or item.label == "TW" or item.label == "TW (台服)" then
+                    hasTW = true
+                    break
+                end
+            end
+            if not hasTW then
+                table.insert(realmCtrl.list, 2, { label = "TW (台服)", realm = "TW", host = "https://pathofexile.tw" })
+            end
+        end
+    end
+end
+
 local onInit = mainObject["OnInit"]
 mainObject["OnInit"] = function(self)
     onInit(self)
+    injectTaiwanRealm(self)
     self.main.controls.checkUpdate.shown = function()
         return false
     end
@@ -181,6 +216,7 @@ mainObject["OnInit"] = function(self)
     buildMode.Init = function(build, ...)
         initBuild(build, ...)
         installOAuthLogoutHook(build)
+        injectTaiwanRealmToImportTab(build)
     end
 end
 
