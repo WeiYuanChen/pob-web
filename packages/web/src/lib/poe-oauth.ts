@@ -178,17 +178,19 @@ export function createPoeOAuthBridge(
   return {
     async authorize(authorizationUrl: string, timeoutMs: number) {
       const state = poeOAuthState(authorizationUrl);
-      try {
-        authorizationAccessToken = await getPoeAccessToken(
-          getAuth0(),
-          false,
-          (forceAuthorization) => authorize(forceAuthorization, timeoutMs),
-        );
-        return { code: crypto.randomUUID(), state, port: 0 };
-      } catch {
-        authorizationAccessToken = undefined;
-        return await authorizePoeDirectPopup(authorizationUrl, timeoutMs);
+      const auth0Client = getAuth0();
+      if (auth0Client.isAuthenticated) {
+        try {
+          authorizationAccessToken = poeAccessToken(await auth0Client.getAccessTokenSilently());
+          if (authorizationAccessToken) {
+            return { code: crypto.randomUUID(), state, port: 0 };
+          }
+        } catch {
+          // Token unavailable via Auth0 silently
+        }
       }
+      authorizationAccessToken = undefined;
+      return await authorizePoeDirectPopup(authorizationUrl, timeoutMs);
     },
     async exchange(url: string, body: string | undefined) {
       const grant = poeOAuthGrant(url, body);
