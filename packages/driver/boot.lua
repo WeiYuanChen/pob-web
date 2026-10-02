@@ -170,36 +170,60 @@ local function installOAuthLogoutHook(buildMode)
     end
 end
 
-local function injectTaiwanRealm(self)
-    if type(self.realmList) == "table" then
+local function patchAccountRealmControl(accountRealm)
+    if type(accountRealm) == "table" and type(accountRealm.list) == "table" then
         local hasTW = false
-        for _, item in ipairs(self.realmList) do
-            if item.realm == "TW" or item.label == "TW" or item.label == "TW (台服)" then
+        for _, item in ipairs(accountRealm.list) do
+            if type(item) == "table" and (item.id == "TW" or item.realmCode == "tw" or item.label == "TW (台服)") then
                 hasTW = true
                 break
             end
         end
         if not hasTW then
-            table.insert(self.realmList, 2, { label = "TW (台服)", realm = "TW", host = "https://pathofexile.tw" })
+            table.insert(accountRealm.list, 2, {
+                label = "TW (台服)",
+                id = "TW",
+                realmCode = "tw",
+                hostName = "https://pathofexile.tw/",
+                profileURL = "account/view-profile/"
+            })
+            if type(accountRealm.CheckDroppedWidth) == "function" then
+                accountRealm:CheckDroppedWidth(accountRealm.enableDroppedWidth)
+            end
         end
     end
 end
 
-local function injectTaiwanRealmToImportTab(buildMode)
+local function patchAllRealms(main)
+    if type(main) ~= "table" then return end
+
+    if type(main.realmList) == "table" then
+        local hasTW = false
+        for _, item in ipairs(main.realmList) do
+            if type(item) == "table" and (item.id == "TW" or item.realmCode == "tw" or item.label == "TW (台服)") then
+                hasTW = true
+                break
+            end
+        end
+        if not hasTW then
+            table.insert(main.realmList, 2, {
+                label = "TW (台服)",
+                id = "TW",
+                realmCode = "tw",
+                hostName = "https://pathofexile.tw/",
+                profileURL = "account/view-profile/"
+            })
+        end
+    end
+
+    local buildMode = main.modes and main.modes["BUILD"]
     local importTab = buildMode and buildMode.importTab
-    if importTab and importTab.controls and importTab.controls.realm then
-        local realmCtrl = importTab.controls.realm
-        if type(realmCtrl.list) == "table" then
-            local hasTW = false
-            for _, item in ipairs(realmCtrl.list) do
-                if item.realm == "TW" or item.label == "TW" or item.label == "TW (台服)" then
-                    hasTW = true
-                    break
-                end
-            end
-            if not hasTW then
-                table.insert(realmCtrl.list, 2, { label = "TW (台服)", realm = "TW", host = "https://pathofexile.tw" })
-            end
+    if importTab and importTab.controls then
+        if importTab.controls.accountRealm then
+            patchAccountRealmControl(importTab.controls.accountRealm)
+        end
+        if importTab.controls.realm then
+            patchAccountRealmControl(importTab.controls.realm)
         end
     end
 end
@@ -207,7 +231,17 @@ end
 local onInit = mainObject["OnInit"]
 mainObject["OnInit"] = function(self)
     onInit(self)
-    injectTaiwanRealm(self)
+    if self.main then
+        patchAllRealms(self.main)
+        local setMode = self.main.SetMode
+        if type(setMode) == "function" then
+            self.main.SetMode = function(mSelf, mode, ...)
+                local res = setMode(mSelf, mode, ...)
+                patchAllRealms(mSelf)
+                return res
+            end
+        end
+    end
     self.main.controls.checkUpdate.shown = function()
         return false
     end
@@ -216,7 +250,7 @@ mainObject["OnInit"] = function(self)
     buildMode.Init = function(build, ...)
         initBuild(build, ...)
         installOAuthLogoutHook(build)
-        injectTaiwanRealmToImportTab(build)
+        patchAllRealms(self.main)
     end
 end
 
