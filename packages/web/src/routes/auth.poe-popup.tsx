@@ -68,8 +68,12 @@ export default function PoeOAuthPopup() {
     sessionStorage.setItem(POE_OAUTH_PENDING_CHANNEL, channelName);
 
     if (authUrl) {
+      const url = new URL(authUrl);
+      if (!url.searchParams.has("redirect_uri")) {
+        url.searchParams.set("redirect_uri", `${window.location.origin}/auth/poe-popup`);
+      }
       setMessage("Redirecting to Path of Exile…");
-      window.location.href = authUrl;
+      window.location.href = url.toString();
       return;
     }
 

@@ -131,9 +131,15 @@ export function authorizePoeDirectPopup(
   const id = crypto.randomUUID();
   const channelName = `${POE_OAUTH_CHANNEL_PREFIX}${id}`;
   const channel = new BroadcastChannel(channelName);
+
+  const targetUrl = new URL(authorizationUrl);
+  if (!targetUrl.searchParams.has("redirect_uri")) {
+    targetUrl.searchParams.set("redirect_uri", `${window.location.origin}/auth/poe-popup`);
+  }
+
   const popupUrl = new URL("/auth/poe-popup", window.location.origin);
   popupUrl.searchParams.set("channel", channelName);
-  popupUrl.searchParams.set("auth_url", authorizationUrl);
+  popupUrl.searchParams.set("auth_url", targetUrl.toString());
 
   return new Promise((resolve) => {
     let popup: Window | null = null;
